@@ -1,11 +1,22 @@
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
+from sqlalchemy.orm import sessionmaker, declarative_base
 
-# PostgreSQL connection URL: postgresql://username:password@host/dbname
-SQLALCHEMY_DATABASE_URL = "postgresql://postgres:032003@localhost/fast_db"
+# Async PostgreSQL connection (note "asyncpg")
+SQLALCHEMY_DATABASE_URL = "postgresql+asyncpg://postgres:032003@localhost/fast_db"
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+engine = create_async_engine(SQLALCHEMY_DATABASE_URL, echo=True)
+
+AsyncSessionLocal = sessionmaker(
+    bind=engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+)
 
 Base = declarative_base()
+
+# Dependency
+async def get_db():
+    async with AsyncSessionLocal() as session:
+        yield session
